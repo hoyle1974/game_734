@@ -8,24 +8,26 @@ import (
 )
 
 type Game struct {
-	update  int
-	model   *Model
-	program *tea.Program
-	view    *View
-	frame   *Buffer
-	logger  *LoggerComponent
-	title   *TitleComponent
-	isDirty atomic.Bool
+	update      int
+	model       *Model
+	program     *tea.Program
+	view        *View
+	frame       *Buffer
+	logger      *LoggerComponent
+	playerstats *PlayerStatsComponent
+	isDirty     atomic.Bool
+	display     *VirtualComponent
 }
 
-func NewGame(width int) *Game {
+func NewGame(width, height int) *Game {
 	g := &Game{}
-	g.frame = NewBuffer(width-2, 25)
+	g.frame = NewBuffer(width-2, height)
 	g.model = NewModel()
 	g.program = tea.NewProgram(g)
 	g.view = NewView(g.model)
 	g.logger = NewLoggerComponent(g, width-2)
-	g.title = NewTitleComponent(width-2, "Game 734")
+	g.playerstats = NewPlayerStatsComponent(g)
+	g.display = NewVirtualComponent(500, 500, g)
 
 	return g
 }
@@ -48,6 +50,7 @@ func (g *Game) Run() (tea.Model, error) {
 
 func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	g.update++
+	g.playerstats.SetStat("Updates", fmt.Sprintf("%d", g.update))
 	g.isDirty.Store(false)
 
 	switch msg := msg.(type) {
@@ -64,9 +67,13 @@ func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return g, tea.Quit
 
 		case "up":
+			g.display.Move(0, -1)
 		case "down":
+			g.display.Move(0, 1)
 		case "left":
+			g.display.Move(-1, 0)
 		case "right":
+			g.display.Move(1, 0)
 
 		}
 	}
@@ -79,9 +86,10 @@ func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (g *Game) View() string {
 
 	g.frame.Clear()
-	g.frame.DrawBox(0, 0, g.frame.width-1, g.frame.height-1)
-	g.frame.WriteBuffer(1, 1, g.title.Render())
-	g.frame.WriteBuffer(1, 2, g.logger.Render())
+	g.frame.DrawBoxWithTitle(0, 0, g.frame.width-1, g.frame.height-1, "Game 734")
+	g.frame.WriteBuffer(1, g.frame.height-g.logger.buffer.height-1, g.logger.Render())
+	g.frame.WriteBuffer(g.frame.width-1-g.playerstats.buffer.width, 1, g.playerstats.Render())
+	g.frame.WriteBuffer(2, 2, g.display.Render(0, 0, g.frame.width-g.playerstats.buffer.width-3, g.frame.height-g.logger.buffer.height-3))
 
 	return g.frame.String()
 }

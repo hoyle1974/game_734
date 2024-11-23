@@ -93,7 +93,7 @@ func (l *LoggerComponent) Render() *Buffer {
 	defer l.lock.RUnlock()
 
 	l.buffer.Clear()
-	l.buffer.DrawBox(0, 0, l.buffer.width-1, l.buffer.height-1)
+	l.buffer.DrawBoxWithTitle(0, 0, l.buffer.width-1, l.buffer.height-1, "Logs")
 	for y, line := range l.lines {
 		l.buffer.WriteString(2, y+1, line)
 	}

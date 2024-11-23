@@ -16,7 +16,7 @@ func main() {
 	// fmt.Println(buf.String())
 	// os.Exit(-1)
 
-	g := NewGame(100)
+	g := NewGame(160, 40)
 
 	g.logger.Log("System starting . . .")
 

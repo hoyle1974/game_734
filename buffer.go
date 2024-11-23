@@ -129,8 +129,30 @@ func (b *Buffer) set(x, y int, v string) {
 	// Find where to set it
 
 	if x >= 0 && x < b.width && y >= 0 && y < b.height {
+		printables := splitByPrintables(v)
+
+		// Handle and keep the escape codes we are copying over
 		idx := 0
-		for _, p := range splitByPrintables(v) {
+		escapeCodes := ""
+		for _, p := range printables {
+			switch p.(type) {
+			case EscapeSequence:
+			case Printable:
+				if x+idx >= 0 && x+idx < b.width {
+					escapeCodes += b.data[y][x+idx].escapeCode
+					b.data[y][x+idx].escapeCode = ""
+					idx++
+				}
+			default:
+				panic("Nope")
+			}
+		}
+		if x+idx >= 0 && x+idx < b.width {
+			b.data[y][x+idx].escapeCode = escapeCodes + b.data[y][x+idx].escapeCode
+		}
+
+		idx = 0
+		for _, p := range printables {
 			switch v := p.(type) {
 			case EscapeSequence:
 				if x+idx >= 0 && x+idx < b.width {
@@ -188,6 +210,18 @@ func (b *Buffer) WriteBuffer(x, y int, other *Buffer) {
 	}
 }
 
+func (b *Buffer) CopyFromBuffer(x, y int, other *Buffer) {
+	for i := y; i < y+b.height; i++ {
+		for j := x; j < x+b.width; j++ {
+			xx := j - x
+			yy := i - y
+			if xx >= 0 && yy >= 0 && xx <= b.width-1 && yy <= b.height-1 {
+				b.set(xx, yy, other.data[i][j].escapeCode+other.data[i][j].printable.String())
+			}
+		}
+	}
+}
+
 // Clear clears the buffer, filling it with spaces.
 func (b *Buffer) Clear() {
 	data := make([][]BufferCell, b.height)
@@ -199,6 +233,11 @@ func (b *Buffer) Clear() {
 		data[y] = temp
 	}
 	b.data = data
+}
+
+func (b *Buffer) DrawBoxWithTitle(x1, y1, x2, y2 int, title string) {
+	b.DrawBox(x1, y1, x2, y2)
+	b.WriteString(x1+1, y1, "┤"+title+"├")
 }
 
 // DrawBox draws a box using the Unicode box-drawing characters.
