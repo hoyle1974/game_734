@@ -8,6 +8,7 @@ import (
 )
 
 type Game struct {
+	views       int
 	update      int
 	model       *Model
 	program     *tea.Program
@@ -51,6 +52,8 @@ func (g *Game) Run() (tea.Model, error) {
 func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	g.update++
 	g.playerstats.SetStat("Updates", fmt.Sprintf("%d", g.update))
+	g.playerstats.SetStat("Views", fmt.Sprintf("%d", g.views))
+
 	g.isDirty.Store(false)
 
 	switch msg := msg.(type) {
@@ -84,12 +87,13 @@ func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (g *Game) View() string {
-
+	g.views++
 	g.frame.Clear()
 	g.frame.DrawBoxWithTitle(0, 0, g.frame.width-1, g.frame.height-1, "Game 734")
 	g.frame.WriteBuffer(1, g.frame.height-g.logger.buffer.height-1, g.logger.Render())
 	g.frame.WriteBuffer(g.frame.width-1-g.playerstats.buffer.width, 1, g.playerstats.Render())
-	g.frame.WriteBuffer(2, 2, g.display.Render(0, 0, g.frame.width-g.playerstats.buffer.width-3, g.frame.height-g.logger.buffer.height-3))
-
-	return g.frame.String()
+	g.frame.WriteBuffer(2, 2, g.display.Render(0, 0, g.frame.width-g.playerstats.buffer.width-4, g.frame.height-g.logger.buffer.height-3))
+	s := g.frame.String()
+	l := len(s)
+	return fmt.Sprintf("Data Length: %d\n%s", l, s)
 }

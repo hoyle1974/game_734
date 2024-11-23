@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 type PlayerStatsComponent struct {
 	dirty  Dirty
@@ -20,8 +23,19 @@ func (p *PlayerStatsComponent) Render() *Buffer {
 	p.buffer.Clear()
 	p.buffer.DrawBoxWithTitle(0, 0, p.buffer.width-1, p.buffer.height-1, "Stats")
 	idx := 0
-	for k, v := range p.stats {
-		p.buffer.WriteString(2, idx+1, fmt.Sprintf("%s : %s", k, v))
+
+	// Extract keys from the map
+	keys := make([]string, 0, len(p.stats))
+	for key := range p.stats {
+		keys = append(keys, key)
+	}
+
+	// Sort the keys
+	sort.Strings(keys)
+
+	// Print the map in alphabetical key order
+	for _, key := range keys {
+		p.buffer.WriteString(2, idx+1, fmt.Sprintf("%s : %s", key, p.stats[key]))
 		idx++
 	}
 
@@ -29,11 +43,11 @@ func (p *PlayerStatsComponent) Render() *Buffer {
 }
 
 func (p *PlayerStatsComponent) SetStat(key string, value string) {
-	p.dirty.Dirty()
+	// p.dirty.Dirty()
 	p.stats[key] = value
 }
 
 func (p *PlayerStatsComponent) DelStats(key string) {
-	p.dirty.Dirty()
+	// p.dirty.Dirty()
 	delete(p.stats, key)
 }

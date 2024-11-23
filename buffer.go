@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"unicode/utf8"
+
+	"github.com/fatih/color"
 )
 
 func CountColumns(s string) int {
@@ -113,6 +115,8 @@ type Buffer struct {
 	data   [][]BufferCell
 }
 
+var colorOff = color.New(color.Reset).SprintFunc()("")
+
 // NewBuffer creates a new buffer with given width and height, initially cleared.
 func NewBuffer(width, height int) *Buffer {
 	b := &Buffer{
@@ -184,15 +188,6 @@ func (b *Buffer) String() string {
 	return builder.String()
 }
 
-// Lines returns the buffer as an array of strings, one per line.
-func (b *Buffer) Lines() []string {
-	lines := make([]string, b.height)
-	// for i := 0; i < b.height; i++ {
-	// 	lines[i] = strings.Join(b.data[i], "")
-	// }
-	return lines
-}
-
 // WriteString writes a string to the buffer starting at position (x, y), trimming as needed.
 func (b *Buffer) WriteString(x, y int, s string) {
 	b.set(x, y, s)
@@ -200,13 +195,18 @@ func (b *Buffer) WriteString(x, y int, s string) {
 
 // WriteBuffer writes the contents of another buffer onto this buffer starting at (x, y), clipping as needed.
 func (b *Buffer) WriteBuffer(x, y int, other *Buffer) {
-	// fmt.Println(other.height, other.width)
 	for i := 0; i < other.height; i++ {
 		for j := 0; j < other.width; j++ {
 			if x+j < b.width && y+i < b.height {
-				b.set(x+j, y+i, other.data[i][j].escapeCode+other.data[i][j].printable.String())
+				b.data[y+i][x+j] = other.data[i][j]
 			}
 		}
+		j := x + other.width - 2
+		if x+j < b.width && y+i < b.height {
+			b.data[y+i][x+j].escapeCode = colorOff + b.data[y+i][x+j].escapeCode
+			// b.data[y+i][x+j].printable.value = "*"
+		}
+
 	}
 }
 
@@ -216,7 +216,17 @@ func (b *Buffer) CopyFromBuffer(x, y int, other *Buffer) {
 			xx := j - x
 			yy := i - y
 			if xx >= 0 && yy >= 0 && xx <= b.width-1 && yy <= b.height-1 {
-				b.set(xx, yy, other.data[i][j].escapeCode+other.data[i][j].printable.String())
+				if i >= 0 && j >= 0 && i <= other.width-1 && j <= other.height-1 {
+					b.data[yy][xx] = other.data[i][j]
+				}
+			}
+		}
+		j := x + b.width
+		xx := j - x
+		yy := i - y
+		if xx >= 0 && yy >= 0 && xx <= b.width-1 && yy <= b.height-1 {
+			if i >= 0 && j >= 0 && i <= other.width-1 && j <= other.height-1 {
+				b.data[yy][xx].escapeCode = colorOff + b.data[yy][xx].escapeCode
 			}
 		}
 	}
