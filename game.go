@@ -17,7 +17,8 @@ type Game struct {
 	logger      *LoggerComponent
 	playerstats *PlayerStatsComponent
 	isDirty     atomic.Bool
-	display     *VirtualComponent
+	//display     *VirtualComponent
+	display *RGBComponent
 }
 
 func NewGame(width, height int) *Game {
@@ -27,8 +28,9 @@ func NewGame(width, height int) *Game {
 	g.program = tea.NewProgram(g)
 	g.view = NewView(g.model)
 	g.logger = NewLoggerComponent(g, width-2)
-	g.playerstats = NewPlayerStatsComponent(g)
-	g.display = NewVirtualComponent(500, 500, g)
+	g.playerstats = NewPlayerStatsComponent(g, height-g.logger.buffer.height-2)
+	// g.display = NewVirtualComponent(500, 500, g)
+	g.display = NewRGBComponent(120, 30)
 
 	return g
 }
@@ -70,13 +72,13 @@ func (g *Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return g, tea.Quit
 
 		case "up":
-			g.display.Move(0, -1)
+			// g.display.Move(0, -1)
 		case "down":
-			g.display.Move(0, 1)
+			// g.display.Move(0, 1)
 		case "left":
-			g.display.Move(-1, 0)
+			// g.display.Move(-1, 0)
 		case "right":
-			g.display.Move(1, 0)
+			// g.display.Move(1, 0)
 
 		}
 	}
@@ -92,7 +94,8 @@ func (g *Game) View() string {
 	g.frame.DrawBoxWithTitle(0, 0, g.frame.width-1, g.frame.height-1, "Game 734")
 	g.frame.WriteBuffer(1, g.frame.height-g.logger.buffer.height-1, g.logger.Render())
 	g.frame.WriteBuffer(g.frame.width-1-g.playerstats.buffer.width, 1, g.playerstats.Render())
-	g.frame.WriteBuffer(2, 2, g.display.Render(0, 0, g.frame.width-g.playerstats.buffer.width-4, g.frame.height-g.logger.buffer.height-3))
+	//g.frame.WriteBuffer(2, 2, g.display.Render(0, 0, g.frame.width-g.playerstats.buffer.width-4, g.frame.height-g.logger.buffer.height-3))
+	g.frame.WriteBuffer(2, 2, g.display.Render())
 	s := g.frame.String()
 	l := len(s)
 	return fmt.Sprintf("Data Length: %d\n%s", l, s)

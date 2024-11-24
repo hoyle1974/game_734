@@ -11,10 +11,10 @@ type PlayerStatsComponent struct {
 	stats  map[string]string
 }
 
-func NewPlayerStatsComponent(dirty Dirty) *PlayerStatsComponent {
+func NewPlayerStatsComponent(dirty Dirty, height int) *PlayerStatsComponent {
 	return &PlayerStatsComponent{
 		dirty:  dirty,
-		buffer: NewBuffer(32, 16),
+		buffer: NewBuffer(32, height),
 		stats:  map[string]string{},
 	}
 }
